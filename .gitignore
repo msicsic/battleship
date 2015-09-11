@@ -1,0 +1,8 @@
+/target
+
+# Intellij #
+*.iml
+/.idea
+!/.idea/codeStyleSettings.xml
+!/.idea/encodings.xml
+
