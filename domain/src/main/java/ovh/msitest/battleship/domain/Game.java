@@ -10,6 +10,7 @@ public class Game {
 
     private List<Boat> boats;
     private List<Player> players;
+    private int joinedPlayers = 0;
 
     public Game() {
         init();
@@ -26,14 +27,20 @@ public class Game {
         players = new ArrayList<>();
         players.add(new Player());
         players.add(new Player());
+
+        joinedPlayers = 0;
     }
 
 
-    public List<Boat> getBoatsToPlace() {
+    public List<Boat> getBoatsToPlaceOrdered() {
         return boats;
     }
 
-    public List<Player> getPlayers() {
-        return players;
+    public void placeBoat(Player player, Boat boat, Coordinate coord, Orientation orientation) {
+        // TODO
+    }
+
+    public Player getNextPlayer() {
+        return players.get(joinedPlayers++);
     }
 }

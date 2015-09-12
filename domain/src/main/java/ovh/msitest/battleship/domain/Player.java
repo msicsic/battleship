@@ -8,4 +8,11 @@ public class Player {
     public Player() {
     }
 
+    public boolean canPlay() {
+        return false;
+    }
+
+    public PlayResult play(Coordinate coordinate) {
+        return null;
+    }
 }

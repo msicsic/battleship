@@ -9,11 +9,15 @@ public class Coordinate {
     @NotNull private final Line line;
     @NotNull private final Column column;
 
+    public Coordinate bottom() {
+        return null;
+    }
+
     public enum Line {
-        _1, _2, _3, _4, _5, _6, _7, _8, _9, _10
+        _A, _B, _C, _D, _E, _F, _G, _H, _I, _J
     }
     public enum Column {
-        _A, _B, _C, _D, _E, _F, _G, _H, _I, _J
+        _1, _2, _3, _4, _5, _6, _7, _8, _9, _10
     }
 
     public Coordinate(Line l, Column c) {
