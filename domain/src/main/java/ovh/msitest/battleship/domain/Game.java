@@ -16,6 +16,10 @@ public class Game {
         init();
     }
 
+    public Game(List<Boat> boats) {
+
+    }
+
     private void init() {
         boats = new ArrayList<>();
         boats.add(new Boat(5));
@@ -42,5 +46,9 @@ public class Game {
 
     public Player getNextPlayer() {
         return players.get(joinedPlayers++);
+    }
+
+    public PlacingPhase join(String pierre) {
+        return new PlacingPhase();
     }
 }

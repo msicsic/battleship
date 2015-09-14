@@ -1,8 +1,13 @@
+import org.hamcrest.CoreMatchers;
 import org.junit.Test;
+import org.hamcrest.Matchers.*;
+import org.hamcrest.CoreMatchers.*;
 import ovh.msitest.battleship.domain.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -15,10 +20,10 @@ public class BehaviourTest {
     @Test
     public void list_of_boats_to_place_is_ok() {
         // Given
-        Game game = new Game();
+        PlacingPhase placingPhase = new PlacingPhase();
 
         // When
-        List<Boat> boats = game.getBoatsToPlaceOrdered();
+        List<Boat> boats = placingPhase.getBoatsToPlaceOrdered();
 
         // Then (les bons bateaux sont presents)
         assertEquals(boats.stream().filter(boat -> boat.getLength() == 5).count(), 1);
@@ -30,161 +35,90 @@ public class BehaviourTest {
     @Test(expected = BoatPlacementException.class)
     public void one_player_can_place_one_boat_of_the_list_only_once() {
         // Given
-        Game game = new Game();
-        Boat boat = game.getBoatsToPlaceOrdered().get(0);
-        Player player = game.getNextPlayer();
+        PlacingPhase placingPhase = new PlacingPhase();
+        Boat boat = placingPhase.getBoatsToPlaceOrdered().get(0);
+        Coordinate coord1 = new Coordinate(Coordinate.Line._A, Coordinate.Column._1);
+        Coordinate coord2 = new Coordinate(Coordinate.Line._C, Coordinate.Column._1);
 
         // When (place one boat)
-        game.placeBoat(player, boat, new Coordinate(Coordinate.Line._A, Coordinate.Column._1), Orientation.HORIZONTAL);
+        placingPhase.place(boat, coord1, Orientation.HORIZONTAL);
 
         // Then (cannot place it again)
-        game.placeBoat(player, boat, new Coordinate(Coordinate.Line._C, Coordinate.Column._1), Orientation.HORIZONTAL);
+        placingPhase.place(boat, coord2, Orientation.HORIZONTAL);
     }
 
     @Test(expected = BoatPlacementException.class)
     public void cannot_place_boats_that_are_overlapping() {
         // Given
-        Game game = new Game();
-        Boat boat1 = game.getBoatsToPlaceOrdered().get(0);
-        Boat boat2 = game.getBoatsToPlaceOrdered().get(1);
-        Player player = game.getNextPlayer();
-        Coordinate coord = new Coordinate(Coordinate.Line._A, Coordinate.Column._1);
+        PlacingPhase placingPhase = new PlacingPhase();
+        Boat boat1 = placingPhase.getBoatsToPlaceOrdered().get(0);
+        Boat boat2 = placingPhase.getBoatsToPlaceOrdered().get(1);
+        Coordinate coord1 = new Coordinate(Coordinate.Line._A, Coordinate.Column._1);
 
         // When (place one boat)
-        game.placeBoat(player, boat1, coord, Orientation.HORIZONTAL);
+        placingPhase.place(boat1, coord1, Orientation.HORIZONTAL);
 
         // Then (cannot place other boat on the same place)
-        game.placeBoat(player, boat2, coord, Orientation.HORIZONTAL);
-    }
-
-    @Test(expected = BoatPlacementException.class)
-    public void cannot_place_boats_that_are_touching_each_other() {
-        // Given
-        Game game = new Game();
-        Boat boat1 = game.getBoatsToPlaceOrdered().get(0);
-        Boat boat2 = game.getBoatsToPlaceOrdered().get(1);
-        Player player = game.getNextPlayer();
-        Coordinate coord1 = new Coordinate(Coordinate.Line._A, Coordinate.Column._1);
-        Coordinate coord2 = new Coordinate(Coordinate.Line._B, Coordinate.Column._1);
-
-        // When (place one boat)
-        game.placeBoat(player, boat1, coord1, Orientation.HORIZONTAL);
-
-        // Then (cannot place other boat just below)
-        game.placeBoat(player, boat2, coord2, Orientation.HORIZONTAL);
+        placingPhase.place(boat2, coord1, Orientation.HORIZONTAL);
     }
 
     @Test(expected = BoatPlacementException.class)
     public void cannot_place_boats_that_is_partially_or_totally_out_of_grid() {
         // Given
-        Game game = new Game();
-        Player player1 = game.getNextPlayer();
-        Coordinate coordCloseToBorder = new Coordinate(Coordinate.Line._J, Coordinate.Column._10);
+        PlacingPhase placingPhase = new PlacingPhase();
+        Boat boat1 = placingPhase.getBoatsToPlaceOrdered().get(0);
+        Coordinate coord1 = new Coordinate(Coordinate.Line._I, Coordinate.Column._10);
 
         // When (place one boat)
-        Boat boat1 = game.getBoatsToPlaceOrdered().stream()
-                .filter(boat -> boat.getLength() >= 4).findFirst().get();
-        game.placeBoat(player1, boat1, coordCloseToBorder, Orientation.HORIZONTAL);
-
-        // Then : Exception
+        placingPhase.place(boat1, coord1, Orientation.HORIZONTAL);
     }
 
-    public void game_can_
-
-    public void once_all_boats_have_been_placed_players_can_play() {
+    @Test(expected = PlacementPhaseException.class)
+    public void one_player_cannot_validate_placement_before_all_boats_are_placed() {
         // Given
-        Game game = new Game();
+        PlacingPhase placingPhase = new PlacingPhase();
+
+        // When
+        placingPhase.finish();
+    }
+
+    @Test
+    public void one_player_can_validate_placement_only_when_all_boats_are_placed() {
+        // Given
+        PlacingPhase placingPhase = new PlacingPhase();
+        Coordinate coord1 = new Coordinate(Coordinate.Line._I, Coordinate.Column._10);
+
+        // When
+        for (Boat boat : placingPhase.getBoatsToPlaceOrdered()) {
+            placingPhase.place(boat, coord1, Orientation.HORIZONTAL);
+            coord1 = coord1.bottom().bottom();
+        }
+
+        // Given
+        placingPhase.finish();
+    }
+
+    public void the_shooting_phase_of_the_first_player_to_join_begins_when_all_players_have_finished_their_placing_phases() {
+        List<Boat> boats = new ArrayList<>();
+        Boat boat = new Boat(3);
+        boats.add(boat);
+        Game game = new Game(boats);
+        PlacingPhase placingPhase1 = game.join("Pierre");
+        PlacingPhase placingPhase2 = game.join("Paul");
         Coordinate placementCoordinate = new Coordinate(Coordinate.Line._D, Coordinate.Column._3);
 
         // When
-        Player player1 = game.getNextPlayer();
-        Player player2 = game.getNextPlayer();
-        for (Boat boat : game.getBoatsToPlaceOrdered()) {
-            game.placeBoat(player1, boat, placementCoordinate, Orientation.HORIZONTAL);
-            game.placeBoat(player2, boat, placementCoordinate, Orientation.HORIZONTAL);
-            placementCoordinate = placementCoordinate.bottom().bottom();
-        }
+        placingPhase1.place(boat, placementCoordinate, Orientation.HORIZONTAL);
+        placingPhase2.place(boat, placementCoordinate, Orientation.HORIZONTAL);
+        ShootingPhase shootingPhase1 = placingPhase1.finish();
+        ShootingPhase shootingPhase2 = placingPhase2.finish();
 
-        assertTrue(player1.canPlay());
-        assertTrue(player2.canPlay());
-
-        currentTurn = currentTurn.play(mon move);
-        if currentturn.player == me
-                //
-
-        etat du jeux ( a qui c'est de jouer'
-
-                //
-        Player pl1 = game.playerJoin("Fabien");
-        Player pl2 = game.playerJoin("Mael");
-        // test : game.canStart() (on peut commenceer a placer)
-        pl1.placeBoat(...);
-        pl1.placeBoat(...);
-
-        // test : game.isReadyToPlay(...)
-        Player pl = game.nextPlayerToPlay())
-        //pl.play(...) -> plante si pas le tours
-
-        //
-
-        Game game = gameFinder.join(gameId);
-        player = game.join("Lucien");
-
-        string ok = "ko";
-
-
-        Type connection : ipServer -> placementPhase;
-        type placementPhase : jouerCoup;
-
-        type toto;
-        type name : firstName * lastName;
-        type maFunction : typ1 => type2
-
-
-
-
-
-
-
-        player.whenPlacing(function(place) { result = "ok" })
-        player.joue(..)
-        //for each player.place
-
-        Waiting playing = player.donePlacing();
-
-        //while playingplayer == null
-           playingPlaying = waitingPlaying.wait();
-
-        mock.ifappeé(mock.methode1);then(...).else(aaa)
-        PlacingPlayer = game;
-
-        PlayingPlayer pl1 = ...;
-        Player pl = pl1.play(); // -> soit : WaitingPlayer, soit un PlayingPlayer
-        if (pl instanceof PlayingPlayer) ;
-        else if (pl instanceof WaitingPlayer)
-
-
-
-
-
+        // Then
+        assertEquals(shootingPhase1.canFire(), true);
+        assertEquals(shootingPhase2.canFire(), false);
     }
 
-    public void player_cannot_play_while_other_player_has_not_placed_all_boats() {
-        // Given
-        Game game = new Game();
-        Coordinate placementCoordinate = new Coordinate(Coordinate.Line._D, Coordinate.Column._3);
-
-        // When
-        Player player1 = game.getNextPlayer();
-        for (Boat boat : game.getBoatsToPlaceOrdered()) {
-            game.placeBoat(player1, boat, placementCoordinate, Orientation.HORIZONTAL);
-            placementCoordinate = placementCoordinate.bottom().bottom();
-        }
-
-        assertEquals(player1.canPlay(), false);
-    }
-
-    public void player1_plays_first() {
+    public void the_first_player_who_finish_placement_shots_first() {
         // Given
         Game game = new Game();
         Coordinate placementCoordinate = new Coordinate(Coordinate.Line._A, Coordinate.Column._1);
@@ -198,8 +132,8 @@ public class BehaviourTest {
             placementCoordinate = placementCoordinate.bottom().bottom();
         }
 
-        assertEquals(player1.canPlay(), true);
-        assertEquals(player2.canPlay(), false);
+        assertThat(player1.canPlay(), is(true));
+        assertThat(player2.canPlay(), is(false));
     }
 
 
