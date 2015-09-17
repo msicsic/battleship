@@ -322,7 +322,7 @@ public class BehaviourTest {
         result = shootingPhase.fire(shootingPhase.getPlayer1(), _B, _2);
         result = shootingPhase.fire(shootingPhase.getPlayer1(), _C, _2);
 
-        // Then (sink)
+        // Then (win)
         assertEquals(result.isWin(), true);
     }
 }
