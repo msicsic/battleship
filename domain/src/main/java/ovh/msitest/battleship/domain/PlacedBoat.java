@@ -8,9 +8,9 @@ public class PlacedBoat {
     Coordinate coordinate;
     Orientation orientation;
 
-    public PlacedBoat(Boat boat, Coordinate coordinate, Orientation orientation) {
+    public PlacedBoat(Boat boat, Coordinate.Column column, Coordinate.Line line, Orientation orientation) {
         this.boat = boat;
-        this.coordinate = coordinate;
+        this.coordinate = new Coordinate(column, line);
         this.orientation = orientation;
     }
 

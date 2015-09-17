@@ -7,48 +7,41 @@ import java.util.List;
  * Created by Mael on 11/09/2015.
  */
 public class Game {
+    private PlayerId player1;
+    private PlayerId player2;
 
-    private List<Boat> boats;
-    private List<Player> players;
-    private int joinedPlayers = 0;
+    public enum Status {
+        WAITING_PLAYER1, WAITING_PLAYER2, READY_TO_PLACE, WAITING_VALIDATION_PL1, WAITING_VALIDATION_PL2
+    }
 
     public Game() {
-        init();
     }
 
-    public Game(List<Boat> boats) {
-
+    public PlayerId join() throws GameException {
+        if (player1 != null && player2 != null) {
+            throw new GameException("both players already joined the game");
+        }
+        PlayerId player = new PlayerId();
+        if (player1 == null) {
+            player1 = player;
+        } else {
+            player2 = player;
+        }
+        return player;
     }
 
-    private void init() {
-        boats = new ArrayList<>();
-        boats.add(new Boat(5));
-        boats.add(new Boat(4));
-        boats.add(new Boat(3));
-        boats.add(new Boat(3));
-        boats.add(new Boat(2));
-
-        players = new ArrayList<>();
-        players.add(new Player());
-        players.add(new Player());
-
-        joinedPlayers = 0;
+    public boolean playersJoined() {
+        return player1 != null && player2 != null;
     }
 
-
-    public List<Boat> getBoatsToPlaceOrdered() {
-        return boats;
+    public Status getStatus() {
+        if (player1 == null) return Status.WAITING_PLAYER1;
+        else if (player2 == null) return Status.WAITING_PLAYER2;
+        else return Status.READY_TO_PLACE;
     }
 
-    public void placeBoat(Player player, Boat boat, Coordinate coord, Orientation orientation) {
-        // TODO
-    }
-
-    public Player getNextPlayer() {
-        return players.get(joinedPlayers++);
-    }
-
-    public PlacingPhase join(String pierre) {
-        return new PlacingPhase();
+    public PlacingPhase startPlacingPhase() throws GameException {
+        if (getStatus() != Status.READY_TO_PLACE) throw new GameException("Both players must join the game before starting");
+        return new PlacingPhase(player1, player2);
     }
 }

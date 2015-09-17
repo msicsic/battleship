@@ -7,11 +7,6 @@ public class Boat {
     private int length;
     private BoatName name;
 
-    public Boat(BoatName name, int length) {
-        this.length = length;
-        this.name = name;
-    }
-
     public Boat(String name, int length) {
         this.name = new BoatName(name);
         this.length = length;

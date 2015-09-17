@@ -14,13 +14,13 @@ public class Coordinate {
     }
 
     public enum Line {
-        _A, _B, _C, _D, _E, _F, _G, _H, _I, _J
-    }
-    public enum Column {
         _1, _2, _3, _4, _5, _6, _7, _8, _9, _10
     }
+    public enum Column {
+        _A, _B, _C, _D, _E, _F, _G, _H, _I, _J
+    }
 
-    public Coordinate(Line l, Column c) {
+    public Coordinate(Column c, Line l) {
         this.line = l;
         this.column = c;
     }
