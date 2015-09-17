@@ -1,3 +1,5 @@
+package java;
+
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 import org.hamcrest.Matchers.*;
