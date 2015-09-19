@@ -6,7 +6,7 @@ package ovh.msitest.battleship.domain;
 public class FireResult {
 
     public enum Status {
-        HIT, MISS, SUNK, WIN
+        HIT, MISS, SINK, WIN
     }
     BoatName boatName;
     Status status;
@@ -28,8 +28,8 @@ public class FireResult {
         return status != Status.MISS;
     }
 
-    public boolean isSink() {
-        return status == Status.SUNK;
+    public boolean isSunk() {
+        return status == Status.SINK;
     }
 
     public boolean isWin() {

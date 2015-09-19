@@ -7,13 +7,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import static org.junit.Assert.assertTrue;
-import static ovh.msitest.battleship.domain.Coordinate.Line.*;
+import static org.junit.Assert.*;
 import static ovh.msitest.battleship.domain.Coordinate.Column.*;
+import static ovh.msitest.battleship.domain.Coordinate.Line.*;
 import static ovh.msitest.battleship.domain.Orientation.HORIZONTAL;
 
 /**
@@ -21,27 +17,26 @@ import static ovh.msitest.battleship.domain.Orientation.HORIZONTAL;
  * Le plateau de jeux est un carré de 10x10 cases (A-J en colonnes, 1-10 en ligne)
  * Le jeu est découpé en 2 phases :
  * => phase de placement des bateaux
- *   - precond : les 2 joueurs doivent avoir joint la partie
- *   - déroulement : chaque joueur place ses 5 bateaux ou il le souhaite, mais sans qu'ils se supperposent ou sortent de la grille
- *     Ils jouent independemment (pas chacun leur tour)
- *   - fin : les 2 joueurs ont placés tous leurs bateaux et ont déclaré qu'ils sont prets (tous les bateaux doivent etre placés pour
- *     pouvoir déclarer etre pret)
+ * - precond : les 2 joueurs doivent avoir joint la partie
+ * - déroulement : chaque joueur place ses 5 bateaux ou il le souhaite, mais sans qu'ils se supperposent ou sortent de la grille
+ * Ils jouent independemment (pas chacun leur tour)
+ * - fin : les 2 joueurs ont placés tous leurs bateaux et ont déclaré qu'ils sont prets (tous les bateaux doivent etre placés pour
+ * pouvoir déclarer etre pret)
  * => phase de tirs
- *   - precond : les 2 joueurs ont déclaré etre pret
- *   - action :
- *     - le premier joueur qui a déclaré etre pret commence en premier
- *     - le joueur dont c'est le tour indique une coordonnée de tir, sous la forme [colonne, ligne]
- *     - le jeu indique au joueur s'il a : raté, touché (et quel bateau), touché coulé (et quel bateau)
- *     - si le coup touche, le meme joueur continue
- *     - si le coup manque, le joueur passe le tour à l'autre joueur
- *   - fin : lorsqu'un joueur a tous ses bateaux coulés, il a perdu
- *
+ * - precond : les 2 joueurs ont déclaré etre pret
+ * - action :
+ * - le premier joueur qui a déclaré etre pret commence en premier
+ * - le joueur dont c'est le tour indique une coordonnée de tir, sous la forme [colonne, ligne]
+ * - le jeu indique au joueur s'il a : raté, touché (et quel bateau), touché coulé (et quel bateau)
+ * - si le coup touche, le meme joueur continue
+ * - si le coup manque, le joueur passe le tour à l'autre joueur
+ * - fin : lorsqu'un joueur a tous ses bateaux coulés, il a perdu
  */
 public class BehaviourTest {
 
 
     @Test
-    public void placingPhase_cannot_start_if_both_players_have_not_joined_the_game() {
+    public void placing_phase_cannot_start_if_both_players_have_not_joined_the_game() {
         // Given (new game, and only 1 player joined the game)
         Game game = new Game();
         game.join();
@@ -53,7 +48,7 @@ public class BehaviourTest {
     }
 
     @Test
-    public void game_can_start_when_both_players_joined() {
+    public void placing_phase_can_start_when_both_players_joined() {
         // Given (new game, and only 1 player joined the game)
         Game game = new Game();
         PlayerId playerId1 = game.join();
@@ -118,7 +113,7 @@ public class BehaviourTest {
     }
 
     @Test(expected = BoatPlacementException.class)
-    public void a_player_cannot_place_boats_that_are_partially_or_totally_out_of_grid() {
+    public void a_player_cannot_place_boats_that_are_not_entirely_inside_the_grid() {
         // Given
         PlacingPhase placingPhase = new PlacingPhase();
 
@@ -184,7 +179,7 @@ public class BehaviourTest {
         assertNotNull(shootingPhase);
     }
 
-    @Test (expected = PlacingPhaseException.class)
+    @Test(expected = PlacingPhaseException.class)
     public void shooting_phase_cannot_start_if_both_players_have_not_validated_their_placement() {
         // Given (PlacingPhase with only one boat to place, and both players placed their ships, and only first player validated placement)
         PlacingPhase placingPhase = new PlacingPhase(Collections.singletonList(new Boat("corvette", 3)));
@@ -214,7 +209,7 @@ public class BehaviourTest {
         assertEquals(shootingPhase.getCurrentPlayer(), placingPhase.getPlayer2());
     }
 
-    @Test
+    @Test(expected = ShootingPhaseException.class)
     public void a_player_who_is_not_turn_cannot_play() {
         // Given a shootingPhase (by default player1 plays first)
         List<PlacedBoat> boats = new ArrayList<>();
@@ -288,7 +283,7 @@ public class BehaviourTest {
     }
 
     @Test
-    public void player_destroy_ship_when_all_cells_belonging_to_one_ship_are_hit() {
+    public void player_destroys_ship_when_all_cells_belonging_to_one_ship_have_been_hit() {
         // Given (shooting phase with one boat on the upper left corner)
         List<PlacedBoat> boats = new ArrayList<>();
         boats.add(new PlacedBoat(new Boat("corvette", 3), _A, _1, HORIZONTAL));
@@ -301,12 +296,12 @@ public class BehaviourTest {
         result = shootingPhase.fire(shootingPhase.getPlayer1(), _C, _1);
 
         // Then (sink)
-        assertEquals(result.isSink(), true);
+        assertEquals(result.isSunk(), true);
         assertEquals(result.getBoatName(), new BoatName("corvette"));
     }
 
     @Test
-    public void game_ends_when_one_player_destroy_all_remaining_boats_of_other_player() {
+    public void game_ends_when_one_player_destroys_all_remaining_boats_of_the_other_player() {
         // Given (shooting phase with 2 boats on the upper left corner)
         List<PlacedBoat> boats = new ArrayList<>();
         boats.add(new PlacedBoat(new Boat("corvette", 3), _A, _1, HORIZONTAL));
