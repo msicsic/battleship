@@ -1,11 +1,9 @@
-package java;
+package ovh.msitest.battleship;
 
 import org.junit.Test;
 import ovh.msitest.battleship.domain.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.Assert.*;
 import static ovh.msitest.battleship.domain.Coordinate.Column.*;
@@ -35,7 +33,7 @@ import static ovh.msitest.battleship.domain.Orientation.HORIZONTAL;
 public class BehaviourTest {
 
 
-    @Test
+    @Test(expected = GameException.class)
     public void placing_phase_cannot_start_if_both_players_have_not_joined_the_game() {
         // Given (new game, and only 1 player joined the game)
         Game game = new Game();
@@ -63,7 +61,7 @@ public class BehaviourTest {
         assertEquals(placingPhase.getPlayer2(), playerId2);
     }
 
-    @Test(expected = BoatPlacementException.class)
+    @Test(expected = PlacingPhaseException.class)
     public void a_player_can_place_a_boat_only_once() {
         // Given
         PlacingPhase placingPhase = new PlacingPhase();
@@ -75,7 +73,7 @@ public class BehaviourTest {
         // Then -> Exception
     }
 
-    @Test(expected = BoatPlacementException.class)
+    @Test(expected = PlacingPhaseException.class)
     public void a_player_cannot_place_a_boat_that_is_not_defined_in_the_rules() {
         // Given
         PlacingPhase placingPhase = new PlacingPhase();
@@ -86,7 +84,7 @@ public class BehaviourTest {
         // Then -> Exception
     }
 
-    @Test(expected = BoatPlacementException.class)
+    @Test(expected = PlacingPhaseException.class)
     public void a_player_cannot_place_boats_that_are_overlapping() {
         // Given
         PlacingPhase placingPhase = new PlacingPhase();
@@ -112,7 +110,7 @@ public class BehaviourTest {
         // Then -> exception)
     }
 
-    @Test(expected = BoatPlacementException.class)
+    @Test(expected = PlacingPhaseException.class)
     public void a_player_cannot_place_boats_that_are_not_entirely_inside_the_grid() {
         // Given
         PlacingPhase placingPhase = new PlacingPhase();
@@ -147,6 +145,22 @@ public class BehaviourTest {
 
         // When
         placingPhase.validate(placingPhase.getPlayer1());
+
+        // Then -> Exception
+    }
+
+    @Test(expected = PlacingPhaseException.class)
+    public void a_player_cannot_play_again_after_validate() {
+        // Given
+        List<Boat> boatsToPlace = new ArrayList<>();
+        boatsToPlace.add(new Boat("corvette", 3));
+        boatsToPlace.add(new Boat("sous marin", 3));
+        PlacingPhase placingPhase = new PlacingPhase(boatsToPlace);
+        placingPhase.place(placingPhase.getPlayer1(), new BoatName("corvette"), _A, _1, HORIZONTAL);
+        placingPhase.validate(placingPhase.getPlayer1());
+
+        // When
+        placingPhase.place(placingPhase.getPlayer1(), new BoatName("sous marin"), _A, _2, HORIZONTAL);
 
         // Then -> Exception
     }
@@ -210,14 +224,16 @@ public class BehaviourTest {
     }
 
     @Test(expected = ShootingPhaseException.class)
-    public void a_player_who_is_not_turn_cannot_play() {
+    public void a_player_whom_it_is_not_his_turn_cannot_play() {
         // Given a shootingPhase (by default player1 plays first)
-        List<PlacedBoat> boats = new ArrayList<>();
-        boats.add(new PlacedBoat(new Boat("corvette", 3), _A, _1, HORIZONTAL));
-        ShootingPhase shootingPhase = new ShootingPhase(boats, boats);
+        Map<Coordinate, Boat> cellPlacements = new HashMap<>();
+        cellPlacements.put(new Coordinate(_A, _1), new Boat("corvette", 3));
+        PlayerId player1 = new PlayerId();
+        PlayerId player2 = new PlayerId();
+        ShootingPhase shootingPhase = new ShootingPhase(player1, player2, cellPlacements, cellPlacements);
 
         // When (player2 try to play)
-        shootingPhase.fire(shootingPhase.getPlayer1(), _A, _1);
+        shootingPhase.fire(shootingPhase.getPlayer2(), _A, _1);
 
         // Then -> Exception
     }
@@ -225,9 +241,12 @@ public class BehaviourTest {
     @Test
     public void same_player_shoots_again_when_he_hits_something() {
         // Given (shooting phase with one boat on the upper left corner)
-        List<PlacedBoat> boats = new ArrayList<>();
-        boats.add(new PlacedBoat(new Boat("corvette", 3), _A, _1, HORIZONTAL));
-        ShootingPhase shootingPhase = new ShootingPhase(boats, boats);
+        Map<Coordinate, Boat> cellPlacements = new HashMap<>();
+        cellPlacements.put(new Coordinate(_A, _1), new Boat("corvette", 3));
+        cellPlacements.put(new Coordinate(_B, _1), new Boat("corvette", 3));
+        PlayerId player1 = new PlayerId();
+        PlayerId player2 = new PlayerId();
+        ShootingPhase shootingPhase = new ShootingPhase(player1, player2, cellPlacements, cellPlacements);
 
         // When (player1 shoots and hit)
         FireResult result = shootingPhase.fire(shootingPhase.getPlayer1(), _A, _1);
@@ -241,9 +260,12 @@ public class BehaviourTest {
     @Test
     public void other_player_shoots_when_previous_player_misses() {
         // Given (shooting phase with one boat on the upper left corner)
-        List<PlacedBoat> boats = new ArrayList<>();
-        boats.add(new PlacedBoat(new Boat("corvette", 3), _A, _1, HORIZONTAL));
-        ShootingPhase shootingPhase = new ShootingPhase(boats, boats);
+        Map<Coordinate, Boat> cellPlacements = new HashMap<>();
+        cellPlacements.put(new Coordinate(_A, _1), new Boat("corvette", 3));
+        cellPlacements.put(new Coordinate(_B, _1), new Boat("corvette", 3));
+        PlayerId player1 = new PlayerId();
+        PlayerId player2 = new PlayerId();
+        ShootingPhase shootingPhase = new ShootingPhase(player1, player2, cellPlacements, cellPlacements);
 
         // When (player1 shoots and miss)
         FireResult result = shootingPhase.fire(shootingPhase.getPlayer1(), _A, _2);
@@ -256,9 +278,12 @@ public class BehaviourTest {
     @Test
     public void player_hit_when_play_on_occupied_cell() {
         // Given (shooting phase with one boat on the upper left corner)
-        List<PlacedBoat> boats = new ArrayList<>();
-        boats.add(new PlacedBoat(new Boat("corvette", 3), _A, _1, HORIZONTAL));
-        ShootingPhase shootingPhase = new ShootingPhase(boats, boats);
+        Map<Coordinate, Boat> cellPlacements = new HashMap<>();
+        cellPlacements.put(new Coordinate(_A, _1), new Boat("corvette", 3));
+        cellPlacements.put(new Coordinate(_B, _1), new Boat("corvette", 3));
+        PlayerId player1 = new PlayerId();
+        PlayerId player2 = new PlayerId();
+        ShootingPhase shootingPhase = new ShootingPhase(player1, player2, cellPlacements, cellPlacements);
 
         // When (player1 shoots and hit)
         FireResult result = shootingPhase.fire(shootingPhase.getPlayer1(), _A, _1);
@@ -271,9 +296,12 @@ public class BehaviourTest {
     @Test
     public void player_miss_when_play_on_empty_cell() {
         // Given (shooting phase with one boat on the upper left corner)
-        List<PlacedBoat> boats = new ArrayList<>();
-        boats.add(new PlacedBoat(new Boat("corvette", 3), _A, _1, HORIZONTAL));
-        ShootingPhase shootingPhase = new ShootingPhase(boats, boats);
+        Map<Coordinate, Boat> cellPlacements = new HashMap<>();
+        cellPlacements.put(new Coordinate(_A, _1), new Boat("corvette", 3));
+        cellPlacements.put(new Coordinate(_B, _1), new Boat("corvette", 3));
+        PlayerId player1 = new PlayerId();
+        PlayerId player2 = new PlayerId();
+        ShootingPhase shootingPhase = new ShootingPhase(player1, player2, cellPlacements, cellPlacements);
 
         // When (player1 shoots and miss)
         FireResult result = shootingPhase.fire(shootingPhase.getPlayer1(), _A, _2);
@@ -285,9 +313,12 @@ public class BehaviourTest {
     @Test
     public void player_destroys_ship_when_all_cells_belonging_to_one_ship_have_been_hit() {
         // Given (shooting phase with one boat on the upper left corner)
-        List<PlacedBoat> boats = new ArrayList<>();
-        boats.add(new PlacedBoat(new Boat("corvette", 3), _A, _1, HORIZONTAL));
-        ShootingPhase shootingPhase = new ShootingPhase(boats, boats);
+        Map<Coordinate, Boat> cellPlacements = new HashMap<>();
+        cellPlacements.put(new Coordinate(_A, _1), new Boat("corvette", 3));
+        cellPlacements.put(new Coordinate(_B, _1), new Boat("corvette", 3));
+        PlayerId player1 = new PlayerId();
+        PlayerId player2 = new PlayerId();
+        ShootingPhase shootingPhase = new ShootingPhase(player1, player2, cellPlacements, cellPlacements);
 
         // When (player1 shoots and hit)
         FireResult result;
@@ -301,21 +332,69 @@ public class BehaviourTest {
     }
 
     @Test
+    public void player1_shoots_on_player2_grid() {
+        // Given (shooting phase with different placement for each player)
+        Map<Coordinate, Boat> player1CellPlacements = new HashMap<>();
+        player1CellPlacements.put(new Coordinate(_A, _1), new Boat("corvette", 3));
+        player1CellPlacements.put(new Coordinate(_B, _1), new Boat("corvette", 3));
+        player1CellPlacements.put(new Coordinate(_C, _1), new Boat("corvette", 3));
+        Map<Coordinate, Boat> player2CellPlacements = new HashMap<>();
+        player2CellPlacements.put(new Coordinate(_A, _2), new Boat("corvette", 3));
+        player2CellPlacements.put(new Coordinate(_B, _2), new Boat("corvette", 3));
+        player2CellPlacements.put(new Coordinate(_C, _2), new Boat("corvette", 3));
+        PlayerId player1 = new PlayerId();
+        PlayerId player2 = new PlayerId();
+        ShootingPhase shootingPhase = new ShootingPhase(player1, player2, player1CellPlacements, player2CellPlacements);
+
+        // When (player1 shoots)
+        FireResult result1 = shootingPhase.fire(player1, _A, _2); // HIT
+        FireResult result2 = shootingPhase.fire(player1, _A, _1); // MISS
+
+        // Then (he hit based on the grid of player2)
+        assertEquals(result1.getStatus(), FireResult.Status.HIT);
+        assertEquals(result2.getStatus(), FireResult.Status.MISS);
+    }
+
+    @Test
+    public void all_previous_shots_must_be_remembered() {
+        // Given (shooting phase with one boat on the upper left corner)
+        Map<Coordinate, Boat> cellPlacements = new HashMap<>();
+        cellPlacements.put(new Coordinate(_A, _1), new Boat("corvette", 3));
+        cellPlacements.put(new Coordinate(_B, _1), new Boat("corvette", 3));
+        cellPlacements.put(new Coordinate(_C, _1), new Boat("corvette", 3));
+        PlayerId player1 = new PlayerId();
+        PlayerId player2 = new PlayerId();
+        ShootingPhase shootingPhase = new ShootingPhase(player1, player2, cellPlacements, cellPlacements);
+
+        // Given 2 hits and 1 miss
+        shootingPhase.fire(shootingPhase.getPlayer1(), _A, _1); // HIT
+        shootingPhase.fire(shootingPhase.getPlayer1(), _B, _1); // HIT
+        shootingPhase.fire(shootingPhase.getPlayer1(), _D, _1); // MISS
+
+        // When (get state of the grid)
+        Map<Coordinate, FireResult> grid = shootingPhase.getGrid(player1);
+
+        // Then
+        assertEquals(grid.get(new Coordinate(_A, _1)).getStatus(), FireResult.Status.HIT);
+        assertEquals(grid.get(new Coordinate(_B, _1)).getStatus(), FireResult.Status.HIT);
+        assertEquals(grid.get(new Coordinate(_C, _1)), null);
+        assertEquals(grid.get(new Coordinate(_D, _1)).getStatus(), FireResult.Status.MISS);
+    }
+
+    @Test
     public void game_ends_when_one_player_destroys_all_remaining_boats_of_the_other_player() {
         // Given (shooting phase with 2 boats on the upper left corner)
-        List<PlacedBoat> boats = new ArrayList<>();
-        boats.add(new PlacedBoat(new Boat("corvette", 3), _A, _1, HORIZONTAL));
-        boats.add(new PlacedBoat(new Boat("sous marin", 3), _A, _2, HORIZONTAL));
-        ShootingPhase shootingPhase = new ShootingPhase(boats, boats);
+        Map<Coordinate, Boat> cellPlacements = new HashMap<>();
+        cellPlacements.put(new Coordinate(_A, _1), new Boat("corvette", 3));
+        cellPlacements.put(new Coordinate(_B, _1), new Boat("corvette", 3));
+        PlayerId player1 = new PlayerId();
+        PlayerId player2 = new PlayerId();
+        ShootingPhase shootingPhase = new ShootingPhase(player1, player2, cellPlacements, cellPlacements);
 
-        // When (player1 shoots and hit)
+        // When (player1 shoots and hit the only boat)
         FireResult result;
         result = shootingPhase.fire(shootingPhase.getPlayer1(), _A, _1);
         result = shootingPhase.fire(shootingPhase.getPlayer1(), _B, _1);
-        result = shootingPhase.fire(shootingPhase.getPlayer1(), _C, _1);
-        result = shootingPhase.fire(shootingPhase.getPlayer1(), _A, _2);
-        result = shootingPhase.fire(shootingPhase.getPlayer1(), _B, _2);
-        result = shootingPhase.fire(shootingPhase.getPlayer1(), _C, _2);
 
         // Then (win)
         assertEquals(result.isWin(), true);

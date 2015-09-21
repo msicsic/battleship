@@ -10,7 +10,19 @@ public class Coordinate {
     @NotNull private final Column column;
 
     public Coordinate bottom() {
-        return null;
+        if (line.ordinal()<9) {
+            return new Coordinate(this.column, Line.values()[line.ordinal() + 1]);
+        } else {
+            return null;
+        }
+    }
+
+    public Coordinate right() {
+        if (column.ordinal()<9) {
+            return new Coordinate(Column.values()[column.ordinal() + 1], this.line);
+        } else {
+            return null;
+        }
     }
 
     public enum Line {
@@ -33,4 +45,23 @@ public class Coordinate {
         return column;
     }
 
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Coordinate)) return false;
+
+        Coordinate that = (Coordinate) o;
+
+        if (line != that.line) return false;
+        return column == that.column;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = line != null ? line.hashCode() : 0;
+        result = 31 * result + (column != null ? column.hashCode() : 0);
+        return result;
+    }
 }
