@@ -1,0 +1,7 @@
+
+- Mettre le code métier derriere un service REST (sans authentification ni autorisation)
+- il faut pouvoir instancier des parties (plusieurs parties peuvent etre faites en //)
+- la ressource REST est la partie
+- comment instancier l'agregat GAME ?
+- coder le client Web (React ou Aurelia ?)
+- Implémenter l'authentification Facebook en OAuth2
