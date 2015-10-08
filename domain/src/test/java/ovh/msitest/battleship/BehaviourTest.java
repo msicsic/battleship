@@ -314,7 +314,7 @@ public class BehaviourTest {
     public void player_destroys_ship_when_all_cells_belonging_to_one_ship_have_been_hit() {
         // Given (shooting phase with one boat on the upper left corner)
         Map<Coordinate, Boat> cellPlacements = new HashMap<>();
-        Boat boat = new Boat("corvette", 3)
+        Boat boat = new Boat("corvette", 3);
         cellPlacements.put(new Coordinate(_A, _1), boat);
         cellPlacements.put(new Coordinate(_B, _1), boat);
         cellPlacements.put(new Coordinate(_C, _1), boat);

@@ -17,6 +17,7 @@ public class Game {
     public Game() {
     }
 
+    synchronized
     public PlayerId join() throws GameException {
         if (player1 != null && player2 != null) {
             throw new GameException("both players already joined the game");

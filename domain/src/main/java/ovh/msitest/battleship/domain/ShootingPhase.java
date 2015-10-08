@@ -22,7 +22,7 @@ public class ShootingPhase {
     Map<Boat, Integer> player2TouchedBoats = new HashMap<>();
     Map<BoatName, Boat> boats = new HashMap<>();
 
-    class BoatHit {
+     class BoatHit {
         Integer hits;
         boolean destroyed;
     }
@@ -69,11 +69,12 @@ public class ShootingPhase {
             Integer hits = touchedBoats.get(boat);
             if (hits == null) hits = 0;
             hits++;
+            touchedBoats.put(boat, hits);
             if (hits == boat.getLength()) {
-
+                result = new FireResult(FireResult.Status.SINK, boat.getName());
+            } else {
+                result = new FireResult(FireResult.Status.HIT, boat.getName());
             }
-            result = new FireResult(FireResult.Status.HIT, boat.getName());
-            // TODO : voir si bateau coulé et si partie gagnée
         }
         playerShoots.put(new Coordinate(col, line), result);
         return result;
